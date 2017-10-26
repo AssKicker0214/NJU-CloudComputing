@@ -36,17 +36,25 @@ public class Commenter implements Runnable{
 
     public void run() {
         System.out.println("waiting for connection on port: "+ COMMENTER_PORT);
+
         try {
-            Socket skt = new ServerSocket(COMMENTER_PORT).accept();
-            System.out.println("connected by "+skt.getRemoteSocketAddress());
+            ServerSocket sskt = new ServerSocket(COMMENTER_PORT);
+            Socket skt=sskt.accept();
             MongoCursor<Document> itr= sortedCollection.find().iterator();
             Writer writer = new PrintWriter(skt.getOutputStream());
             while(itr.hasNext()){
                 Document comment = itr.next();
-                writer.write(comment.toJson());
+                System.out.print(comment+"\n");
+                writer.write(comment.toJson()+"\n");
+
+                writer.flush();
+
+                Thread.sleep(2000);
             }
         } catch (IOException e) {
             e.printStackTrace();
+        }catch (java.lang.InterruptedException e2){
+            e2.printStackTrace();
         }
     }
 

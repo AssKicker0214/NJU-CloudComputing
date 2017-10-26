@@ -18,16 +18,19 @@ import scala.Tuple2;
  * time: {$time}
  **/
 public class StreamHandler {
-    public static final String STREAM_SERVER_HOST = "localhost";
+    public static final String STREAM_SERVER_HOST = "114.212.245.176";
     public static final int STREAM_SERVER_PORT = 9999;
     private JavaStreamingContext jssc;
-    public StreamHandler(){
+
+    public StreamHandler() {
         SparkConf conf = new SparkConf()
                 .setMaster("spark://pyq-master:7077")
+                .set("spark.driver.host", "114.212.245.176")
 //                .set("SPARK_LOCAL_IP", "114.212.242.132")
 //                .set("SPARK_")
                 .setAppName("Team13");
         jssc = new JavaStreamingContext(conf, Durations.seconds(1));
+
 
 //        JavaReceiverInputDStream<String> lines = jssc.file
     }
@@ -35,15 +38,16 @@ public class StreamHandler {
     public void defineProcess() {
         JavaReceiverInputDStream<String> lines = jssc.socketTextStream(STREAM_SERVER_HOST, STREAM_SERVER_PORT);
         JavaDStream<Document> docs = lines.map(Document::parse);
-        JavaPairDStream<String, Integer> commentPairs = docs.mapToPair(doc-> new Tuple2<>(""+doc.get("comment_id"), 1));
-        JavaPairDStream<String, Integer> commentCounts = commentPairs.reduceByKey((cnt1, cnt2)->cnt1+cnt2);
-        commentCounts.print(10);
-        System.out.println("-----");
+        JavaPairDStream<String, Integer> commentPairs = docs.mapToPair(doc -> new Tuple2<>("" + doc.get("comment_id"), 1));
+        JavaPairDStream<String, Integer> commentCounts = commentPairs.reduceByKey((cnt1, cnt2) -> cnt1 + cnt2);
+        lines.print(10);
+
     }
 
-    public void start(){
-        jssc.start();
+    public void start() {
+
         try {
+            jssc.start();
             jssc.awaitTermination();
         } catch (InterruptedException e) {
             e.printStackTrace();
