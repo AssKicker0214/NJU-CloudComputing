@@ -21,10 +21,11 @@ import scala.Tuple2;
  * author: Qiao Hongbo
  * time: {$time}
  **/
-public class StreamHandler{
+public class StreamHandler implements Serializable{
     public static final String STREAM_SERVER_HOST = "114.212.245.176";
-    public static final int STREAM_SERVER_PORT = 9999;
-    private JavaStreamingContext jssc;
+    public static final Integer STREAM_SERVER_PORT = 9999;
+
+    //private JavaStreamingContext jssc;
 
     public StreamHandler() {
         SparkConf conf = new SparkConf()
@@ -34,46 +35,50 @@ public class StreamHandler{
 //                .set("SPARK_")
                 .setAppName("Team13");
         //.setJars(new String[]{"/home/puyvqi/test/NJU-CloudComputing/target/spark-streaming-jingdong-1.0-SNAPSHOT.jar"});
-        jssc = new JavaStreamingContext(conf, Durations.seconds(1));
+        JavaStreamingContext jssc = new JavaStreamingContext(conf, Durations.seconds(1));
 
-
-//        JavaReceiverInputDStream<String> lines = jssc.file
-    }
-
-    public void defineProcess() {
-        JavaReceiverInputDStream<String> lines = jssc.socketTextStream(STREAM_SERVER_HOST, STREAM_SERVER_PORT);
-        JavaDStream<Document> docs = lines.map(new Function<String, Document>() {
-            @Override
-            public Document call(String s) throws Exception {
-                return Document.parse(s);
-            }
-        });
+        try {
+            JavaReceiverInputDStream<String> lines = jssc.socketTextStream(STREAM_SERVER_HOST, STREAM_SERVER_PORT);
+            JavaDStream<Document> docs = lines.map(new Function<String, Document>() {
+                @Override
+                public Document call(String s) throws Exception {
+                    return Document.parse(s);
+                }
+            });
 //        JavaPairDStream<String, Integer> commentPairs = docs.mapToPair(doc -> new Tuple2<>("" + doc.get("comment_id"), 1));
-        JavaPairDStream<String, Integer> commentPairs = docs.mapToPair(new PairFunction<Document, String, Integer>() {
-            @Override
-            public Tuple2<String, Integer> call(Document document) throws Exception {
-                return new Tuple2<>(document.get("comment_id")+"", 1);
-            }
-        });
+            JavaPairDStream<String, Integer> commentPairs = docs.mapToPair(new PairFunction<Document, String, Integer>() {
+                @Override
+                public Tuple2<String, Integer> call(Document document) throws Exception {
+                    return new Tuple2<>(document.get("comment_id") + "", 1);
+                }
+            });
 //        JavaPairDStream<String, Integer> commentCounts = commentPairs.reduceByKey((cnt1, cnt2) -> cnt1 + cnt2);
-        JavaPairDStream<String, Integer> commentCounts = commentPairs.reduceByKey(new Function2<Integer, Integer, Integer>() {
-            @Override
-            public Integer call(Integer integer, Integer integer2) throws Exception {
-                return integer+integer2;
-            }
-        });
-        commentCounts.print(10);
-
-    }
-
-    public void start() {
-
+            JavaPairDStream<String, Integer> commentCounts = commentPairs.reduceByKey(new Function2<Integer, Integer, Integer>() {
+                @Override
+                public Integer call(Integer integer, Integer integer2) throws Exception {
+                    return integer + integer2;
+                }
+            });
+            lines.print(10);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
         try {
             jssc.start();
             jssc.awaitTermination();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+//        JavaReceiverInputDStream<String> lines = jssc.file
+    }
+
+    public void defineProcess() {
+    }
+
+    public void start() {
+
+
 
     }
 

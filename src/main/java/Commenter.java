@@ -40,7 +40,13 @@ public class Commenter implements Runnable{
         try {
             ServerSocket sskt = new ServerSocket(COMMENTER_PORT);
             Socket skt=sskt.accept();
-            MongoCursor<Document> itr= sortedCollection.find().iterator();
+            PrintWriter wr=new PrintWriter(skt.getOutputStream());
+            while (true){
+                Thread.sleep(1000);
+                wr.write("hello world \n");
+                wr.flush();
+            }
+            /*MongoCursor<Document> itr= sortedCollection.find().iterator();
             Writer writer = new PrintWriter(skt.getOutputStream());
             while(itr.hasNext()){
                 Document comment = itr.next();
@@ -49,8 +55,8 @@ public class Commenter implements Runnable{
 
                 writer.flush();
 
-                Thread.sleep(2000);
-            }
+                Thread.sleep(2000);*/
+
         } catch (IOException e) {
             e.printStackTrace();
         }catch (java.lang.InterruptedException e2){
